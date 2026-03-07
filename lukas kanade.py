@@ -22,6 +22,25 @@ def lk_voxel(gradients_v, x, y, z, n):
     b=-np.array(voxel[2].flatten())
     return  np.linalg.lstsq(A, b.T)
 
+# doesnt work
+# def lk_voxel_extend_boundary(gradients_v, x_p, y_p, z_p, n):
+#     # extend boundary pixels
+#     def bounds(var, max_value):
+#         if var < 0: return 0
+#         elif var > max_value: return max_value
+#         else: return var
+#
+#     size = n*2 + 1
+#     voxel = np.zeros([3,size,size,size])
+#     for z in range(size):
+#         for y in range(size):
+#             for x in range(size):
+#                 for g in range(3):
+#                     voxel[g][z][y][x] = gradients_v[g][bounds(z_p, 62)][bounds(y_p, 254)][bounds(x_p, 254)]
+#     A= np.array([voxel[0].flatten(), voxel[1].flatten()]).T
+#     b=-np.array(voxel[2].flatten())
+#     return  np.linalg.lstsq(A, b.T)
+
 
 def plot_vectors(gradients, stride, n):
     if not os.path.exists("./toy_plot"):
@@ -41,9 +60,11 @@ def plot_vectors(gradients, stride, n):
                     plot["U"].append(sol[0][0])
                     plot["V"].append(sol[0][1])
 
+
         # remove outliers
-        outliers = np.where((plot["U"] > np.mean(plot["U"]) + 3 * np.std(plot["U"])) | (plot["U"] < np.mean(plot["U"]) - 3 * np.std(plot["U"]))
-                            | (plot["V"] > np.mean(plot["V"]) + 3 * np.std(plot["V"])) | (plot["V"] < np.mean(plot["V"]) - 3 * np.std(plot["V"])))
+        sdevs = 3
+        outliers = np.where((plot["U"] > np.mean(plot["U"]) + sdevs * np.std(plot["U"])) | (plot["U"] < np.mean(plot["U"]) - sdevs * np.std(plot["U"]))
+                            | (plot["V"] > np.mean(plot["V"]) + sdevs * np.std(plot["V"])) | (plot["V"] < np.mean(plot["V"]) - sdevs * np.std(plot["V"])))
         plot = {key:np.delete(plot[key], outliers) for key in plot.keys()}
 
         plt.imshow(vid[frame])
