@@ -26,18 +26,18 @@ def lk_voxel(gradients_v, x, y, z, n):
 def plot_vectors(gradients, stride, n):
     if not os.path.exists("./toy_plot"):
         os.mkdir("./toy_plot")
-    for frame in range(0,63):
+    for frame in range(n,63-n):
         plot = {"x":[],"y":[],"U":[],"V": []}
         print(frame)
-        for y in range(0, 255):
-            for x in range(0, 255):
+        for y in range(n, 255-n):
+            for x in range(n, 255-n):
                 if ((x %stride == 0 and y %stride == 0)
                         # remove small gradients
-                        and not (gradients[0][frame][y][x]**2 + gradients[1][frame][y][x]**2)**(1/2) < 0.005):
+                        and not (gradients[0][frame][y][x]**2 + gradients[1][frame][y][x]**2)**(1/2) < 0.001):
                     sol = lk_voxel(gradients, x, y, frame, n)
                     plot["x"].append(x)
                     #y is inverted for some reason
-                    plot["y"].append(254-y)
+                    plot["y"].append(y)
                     plot["U"].append(sol[0][0])
                     plot["V"].append(sol[0][1])
 
@@ -46,6 +46,7 @@ def plot_vectors(gradients, stride, n):
                             | (plot["V"] > np.mean(plot["V"]) + 3 * np.std(plot["V"])) | (plot["V"] < np.mean(plot["V"]) - 3 * np.std(plot["V"])))
         plot = {key:np.delete(plot[key], outliers) for key in plot.keys()}
 
+        plt.imshow(vid[frame])
         plt.quiver(plot["x"], plot["y"], plot["U"], plot["V"], color="blue", scale = 20, width = 0.0008)
         if frame < 10: frameno = "0" + str(frame)
         else: frameno = str(frame)
