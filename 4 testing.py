@@ -55,10 +55,7 @@ def plot_vectors(gradients, n, stride, gradient_type):
     if not os.path.exists(path):
         os.mkdir(path)
     gradient_len = [(x**2 + y**2)**(1/2) for x,y in zip(gradients[0].flatten(), gradients[1].flatten())]
-    print(max(gradient_len))
-    cutoff =  np.percentile(gradient_len, 90)
-    print(cutoff)
-
+    cutoff =  np.percentile(gradient_len, 95)
     for frame in range(n, dimensions[0] - n):
         plot = {"x": [], "y": [], "U": [], "V": []}
         print(frame)
@@ -83,24 +80,32 @@ def plot_vectors(gradients, n, stride, gradient_type):
         range_U = [np.percentile(plot["U"],1), np.percentile(plot["U"],99)]
         range_V = [np.percentile(plot["V"],1), np.percentile(plot["V"],99)]
         outliers = np.where((plot["U"] > range_U[1]) | (plot["U"] < range_U[0]) | (plot["V"] > range_V[1]) | (plot["V"] < range_V[0]))
-        plot = {key: np.delete(plot[key], outliers) for key in plot.keys()}
 
-        plt.imshow(vid[frame])
-        plt.quiver(plot["x"], plot["y"], plot["U"], plot["V"], color="red", scale=20, width=0.0005)
+        plot = {key: np.delete(plot[key], outliers) for key in plot.keys()}
+        fig, ax = plt.subplots()
+        fig.set_size_inches(gifsize, dimensions[1]/dimensions[2]*gifsize)
+        ax.set_axis_off()
+        fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
+        ax.imshow(vid_color[frame])
+        ax.quiver(plot["x"], plot["y"], plot["U"], plot["V"], color="red", scale=20, width=0.0015)
         if frame < 10:
+            frameno = "00" + str(frame)
+        elif frame < 100:
             frameno = "0" + str(frame)
         else:
             frameno = str(frame)
-        plt.title('Lukas-Kanade' + " frame " + str(frame) + " n = " + str(n) + " stride = " + str(stride) + " gradient = " + gradient_type)
-        plt.savefig(path + "/frame" + frameno + ".png", dpi=500)
-        plt.clf()
-    plt.close()
+        # ax.set_title('Lukas-Kanade' + " frame " + str(frame) + " n = " + str(n) + " stride = " + str(stride) + " gradient = " + gradient_type)
+        fig.savefig(path + "/frame" + frameno + ".png", dpi=250)
+        # plt.clf()
+        plt.close()
     animate(path)
 
 def animate(path):
     image_list = [mpimg.imread(path +"/" +  img) for img in os.listdir(path)]
     fig, ax = plt.subplots()
+    fig.set_size_inches(gifsize, dimensions[1]/dimensions[2]*gifsize)
     ax.set_axis_off()
+    fig.subplots_adjust(left=0, bottom=0, right=1, top=1)
     frames = [[ax.imshow(img, animated=True)] for img in image_list]
 
     # Create the animation
@@ -109,7 +114,7 @@ def animate(path):
                                     metadata=dict(artist='Me'),
                                     bitrate=1800)
     ani.save(path + ".gif", writer=writer)
-    plt.close()
+    plt.clf()
 
 def LK(gradient, n, stride):
     if gradient == "gauss":
@@ -122,8 +127,9 @@ def LK(gradient, n, stride):
 
     plot_vectors(vid_gradients, n, stride, gradient)
 
-vid = np.array([rgb2gray(ski.io.imread("./edgar/" + image)) for image in os.listdir("./edgar")])
+vid_color = [ski.io.imread("./edgar/" + image) for image in os.listdir("./edgar")]
+vid = np.array([rgb2gray(img) for img in vid_color])
 dimensions = vid.shape
-print(dimensions)
-LK("gauss", 2,4)
+gifsize = 2.9
+LK("gauss", 3,4)
 
