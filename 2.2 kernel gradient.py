@@ -12,7 +12,7 @@ ndimg_x = ndi.convolve(img[1], [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]])
 ndimg_y = ndi.convolve(img[1], np.array([[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]).T)
 ndimg_z = ndi.convolve(img[0:2], np.array([-2, 0, 2]), axes=(0))
 
-ndimg_z = ndi.convolve(img[0:2],
+ndimg_z2 = ndi.convolve(img[0:2],
                [[[-1, -1, -1], [-1, -2, -1], [-1, -1, -1]],
                         [[0, 0, 0], [0, 0, 0], [0, 0, 0]],
                         [[1, 1, 1], [1, 2, 1], [1, 1, 1]]], axes=(0, 1, 2))

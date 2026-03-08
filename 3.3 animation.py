@@ -24,5 +24,8 @@ for img in image_list:
 
 # Create the animation
 ani = animation.ArtistAnimation(fig, frames, interval=100, blit=True)#, repeat_delay=1000)
-
+writer = animation.PillowWriter(fps=15,
+                                metadata=dict(artist='Me'),
+                                bitrate=1800)
+ani.save("LK.gif", writer=writer)
 plt.show()
