@@ -33,9 +33,9 @@ def make_gradients_kernel(video):
 
 def make_gradients_gaussian(video):
     gradients = np.zeros([3, 64, 256, 256])
-    gradients[0] = [ndi.gaussian_filter1d(video[i], 4, order=1, axis=1) for i in range(0,64)]
-    gradients[1] = [ndi.gaussian_filter1d(video[i], 4, order=1, axis=0) for i in range(0,64)]
-    gradients[2] = ndi.gaussian_filter1d(video, 4, order=1, axis=0)# for i in range(0,64)]
+    gradients[0] = [ndi.gaussian_filter1d(video[i], 4, order=1, axis=1) for i in range(0, 64)]
+    gradients[1] = [ndi.gaussian_filter1d(video[i], 4, order=1, axis=0) for i in range(0, 64)]
+    gradients[2] = ndi.gaussian_filter1d(video, 4, order=1, axis=0)  # for i in range(0,64)]
 
     return gradients
 
@@ -48,23 +48,17 @@ def lk_voxel(gradients_v, x, y, z, n):
     return np.linalg.lstsq(A, b.T)
 
 
-
-
 def plot_vectors(gradients, n, stride, gradient_type):
     path = "./toy_plot_n" + str(n) + "_stride" + str(stride) + "_gradient_" + gradient_type
     if not os.path.exists(path):
         os.mkdir(path)
-    gradient_len = [(x**2 + y**2)**(1/2) for x,y in zip(gradients[0].flatten(), gradients[1].flatten())]
-    print(max(gradient_len))
-    cutoff =  np.percentile(gradient_len, 90)
-    print(cutoff)
-
     for frame in range(n, 64 - n):
+        gradient_len = [(x ** 2 + y ** 2) ** (1 / 2) for x, y in zip(gradients[0].flatten(), gradients[1].flatten())]
+        cutoff = np.percentile(gradient_len, 90)
         plot = {"x": [], "y": [], "U": [], "V": []}
         print(frame)
         for y in range(n, 255 - n):
             for x in range(n, 255 - n):
-                # print((gradients[0][frame][y][x] ** 2 + gradients[1][frame][y][x] ** 2) ** (1 / 2))
                 if ((x % stride == 0 and y % stride == 0)
                         # remove small gradients
                         and not (gradients[0][frame][y][x] ** 2 + gradients[1][frame][y][x] ** 2) ** (1 / 2) < cutoff
@@ -74,15 +68,8 @@ def plot_vectors(gradients, n, stride, gradient_type):
                     plot["y"].append(y)
                     plot["U"].append(sol[0][0])
                     plot["V"].append(sol[0][1])
-
-        # remove outliers
-        # sdevs = 7
-        # outliers = np.where((plot["U"] > np.mean(plot["U"]) + sdevs * np.std(plot["U"])) | (
-        #         plot["U"] < np.mean(plot["U"]) - sdevs * np.std(plot["U"]))
-        #                     | (plot["V"] > np.mean(plot["V"]) + sdevs * np.std(plot["V"])) | (
-        #                             plot["V"] < np.mean(plot["V"]) - sdevs * np.std(plot["V"])))
-        range_U = [np.percentile(plot["U"],1), np.percentile(plot["U"],99)]
-        range_V = [np.percentile(plot["V"],1), np.percentile(plot["V"],99)]
+        range_U = [np.percentile(plot["U"], 1), np.percentile(plot["U"], 99)]
+        range_V = [np.percentile(plot["V"], 1), np.percentile(plot["V"], 99)]
         outliers = np.where((plot["U"] > range_U[1]) | (plot["U"] < range_U[0]) | (plot["V"] > range_V[1]) | (plot["V"] < range_V[0]))
         plot = {key: np.delete(plot[key], outliers) for key in plot.keys()}
 
@@ -98,19 +85,17 @@ def plot_vectors(gradients, n, stride, gradient_type):
     plt.close()
     animate(path)
 
+
 def animate(path):
-    image_list = [mpimg.imread(path +"/" +  img) for img in os.listdir(path)]
+    image_list = [mpimg.imread(path + "/" + img) for img in os.listdir(path)]
     fig, ax = plt.subplots()
     ax.set_axis_off()
     frames = [[ax.imshow(img, animated=True)] for img in image_list]
-
-    # Create the animation
     ani = animation.ArtistAnimation(fig, frames, interval=100, blit=True)
-    writer = animation.PillowWriter(fps=15,
-                                    metadata=dict(artist='Me'),
-                                    bitrate=1800)
+    writer = animation.PillowWriter(fps=15, metadata=dict(artist='Me'), bitrate=1800)
     ani.save(path + ".gif", writer=writer)
     plt.close()
+
 
 def LK(gradient, n, stride):
     if gradient == "gauss":
@@ -123,9 +108,10 @@ def LK(gradient, n, stride):
 
     plot_vectors(vid_gradients, n, stride, gradient)
 
+
 vid = [rgb2gray(ski.io.imread("./toy_problem/" + image)) for image in os.listdir("./toy_problem")]
 
-for s in range(2,5):
-    for n in range(1,5):
+for s in range(2, 5):
+    for n in range(1, 5):
         for g in ["gauss", "kernel", ""]:
             LK(g, n, s)
